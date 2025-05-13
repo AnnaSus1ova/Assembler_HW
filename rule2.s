@@ -1,35 +1,50 @@
-# Правило 2: все символы, не являющиеся латинскими буквами, заменить пробелами
-# Вход: char* text в %rdi
-
-.global apply_rule2
-
+	.file	"rule2.c"
+	.text
+	.globl	apply_rule2
+	.def	apply_rule2;	.scl	2;	.type	32;	.endef
+	.seh_proc	apply_rule2
 apply_rule2:
-    push %rbx
-    mov %rdi, %rbx        # Сохраняем указатель на текст
-    
-    mov $0, %rcx          # Счетчик
-process_loop:
-    mov (%rbx, %rcx), %al
-    cmp $0, %al
-    je end_process
-    
-    # Проверяем, является ли символ латинской буквой
-    cmp $'A', %al
-    jl replace
-    cmp $'Z', %al
-    jle next_char
-    cmp $'a', %al
-    jl replace
-    cmp $'z', %al
-    jle next_char
-    
-replace:
-    mov $' ', (%rbx, %rcx)
-    
-next_char:
-    inc %rcx
-    jmp process_loop
-    
-end_process:
-    pop %rbx
-    ret
+	pushq	%rbp
+	.seh_pushreg	%rbp
+	movq	%rsp, %rbp
+	.seh_setframe	%rbp, 0
+	subq	$48, %rsp
+	.seh_stackalloc	48
+	.seh_endprologue
+	movq	%rcx, 16(%rbp)
+	movl	$0, -4(%rbp)
+	jmp	.L2
+.L4:
+	movl	-4(%rbp), %eax
+	cltq
+	movq	16(%rbp), %rdx
+	addq	%rdx, %rax
+	movzbl	(%rax), %eax
+	movsbl	%al, %eax
+	movl	%eax, %ecx
+	movq	__imp_isalpha(%rip), %rax
+	call	*%rax
+	testl	%eax, %eax
+	jne	.L3
+	movl	-4(%rbp), %eax
+	cltq
+	movq	16(%rbp), %rdx
+	addq	%rdx, %rax
+	movb	$32, (%rax)
+.L3:
+	addl	$1, -4(%rbp)
+.L2:
+	movl	-4(%rbp), %eax
+	cltq
+	movq	16(%rbp), %rdx
+	addq	%rdx, %rax
+	movzbl	(%rax), %eax
+	testb	%al, %al
+	jne	.L4
+	nop
+	nop
+	addq	$48, %rsp
+	popq	%rbp
+	ret
+	.seh_endproc
+	.ident	"GCC: (x86_64-win32-seh-rev0, Built by MinGW-Builds project) 14.2.0"
